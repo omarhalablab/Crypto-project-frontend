@@ -31,7 +31,7 @@ const App: React.FC<EncryptorProps> = () => {
       const keyPair = forge.pki.rsa.generateKeyPair({ bits: 2048 });
         console.log("keypair",keyPair)
       // Convert keys to PEM format
-      const privateKeyPem = forge.pki.privateKeyToPem(keyPair.privat`eKey);
+      const privateKeyPem = forge.pki.privateKeyToPem(keyPair.privateKey);
       const publicKeyPem = forge.pki.publicKeyToPem(keyPair.publicKey);
 
       // Log the keys (you can handle them as needed)
