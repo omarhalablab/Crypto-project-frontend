@@ -2,14 +2,16 @@ import { useState } from "react";
 import { Button, Col, Form, FormGroup, Input, Label, Row } from "reactstrap";
 interface SendMessagesProps {
     GenerateAESKey:()=>void
+    setMessage:React.Dispatch<React.SetStateAction<string>>;
+    handleSendMessage:()=>void
 }
 
-const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey}) => {
+const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey,setMessage,handleSendMessage}) => {
     const [error,setError] = useState<boolean>(false)
     const [phoneNumberToCheck , setPhoneNumberToCheck] = useState<string|number>()
     const handleSubmit = (e:any) =>{
         e.preventDefault();
-       
+        handleSendMessage()
     }
   return (
     <div style={{ margin: "20px 20px" }}>
@@ -42,7 +44,7 @@ const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey}) => {
                         setError(true)
                     }
                     else{
-                        setPhoneNumberToCheck(e.target.value)
+                      setMessage(e.target.value)
                         setError(false)
                     }
                 }}

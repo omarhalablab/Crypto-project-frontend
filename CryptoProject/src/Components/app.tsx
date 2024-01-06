@@ -24,17 +24,17 @@ interface EncryptorProps {}
 
 const App: React.FC<EncryptorProps> = () => {
   const [plaintext, setPlaintext] = useState<string>("");
-  const [encryptedMessage, setEncryptedMessage] = useState<string | null>(null);
+  // const [encryptedMessage, setEncryptedMessage] = useState<string | null>(null);
   const [encryptionKey, setEncryptionKey] = useState<string>("");
   const [isConnected, setIsConnected] = useState<Boolean>(false);
   const [userName, setUserName] = useState<string>("");
   const [activeTab, setActiveTab] = useState<any>(1);
-  const [validNumber, setValidNumber] = useState<string>("null");
   const [userToMessage, setUserToMessage] = useState<userData>({
     number: "",
     publicKey: "",
   });
   const [UserDoesNotExist, setUserDoesNotExist] = useState<boolean>(false);
+  const [message,setMessage] = useState<string>("")
   // public and private keys for RSA
   const [pubKey, setPublicKey] = useState<string>();
   const [privKey, setPrivateKey] = useState<string>();
@@ -45,7 +45,6 @@ const App: React.FC<EncryptorProps> = () => {
 
   const handleSubmitForm = async () => {
     if (userName.trim() === "") {
-      console.log("denied");
     } else {
       try {
         const apiUrl = "http://localhost:3000/connect";
@@ -57,7 +56,7 @@ const App: React.FC<EncryptorProps> = () => {
         const response = await axios.post(apiUrl, requestData);
 
         ///check response
-        console.log("Response connecting , ", response);
+        // console.log("Response connecting , ", response);
 
         response.status === 201 && setIsConnected(true);
       } catch (error) {
@@ -77,7 +76,7 @@ const App: React.FC<EncryptorProps> = () => {
       const response = await axios.post(apiUrl, requestData);
 
       ///check response
-      console.log("Response checking user, ", response);
+      // console.log("Response checking user, ", response);
 
       if (response.status === 201 || response.status === 200) {
         setUserToMessage({
@@ -95,49 +94,95 @@ const App: React.FC<EncryptorProps> = () => {
     }
   };
 
+ 
+
+  const handleSendMessage = () =>{
+    const { encryptedMessage ,iv} = encryptWithAES(message, encryptionKey);
+
+
+
+    //// encrypt symmetric key with public key 
+
+      const symmetricKey = encryptionKey;
+      const publicKeyPem = cleanPublicKey(userToMessage.publicKey);
+
+      const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+  
+      const encryptedSymmetricKey = publicKey.encrypt(forge.util.createBuffer(symmetricKey, 'utf-8'));
+      const encryptedSymmetricKeyHex = forge.util.bytesToHex(encryptedSymmetricKey);
+    ////
+
+      console.log("message: ",message , "\nencryptedMessage " , encryptedMessage , "\n symmetric key : ",encryptionKey , "\nencrypted symmetric key", encryptedSymmetricKeyHex)
+      const decryptedMessage = decryptWithAES(
+        encryptedMessage,
+        encryptionKey,
+        iv
+      );
+      console.log("decryptedMessage ",decryptedMessage)
+// if(privKey){
+//   const x = decryptSymmetricKey(encryptedSymmetricKeyHex,privKey)
+//    console.log(x)}
+  }
+
+
+
+  const decryptSymmetricKey = (encryptedSymmetricKeyHex:string, privateKeyPem:string) => {
+    console.log("aqqqa ",encryptedSymmetricKeyHex, privateKeyPem)
+    const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+  
+    // Convert the encrypted symmetric key from hex to bytes
+    const encryptedSymmetricKeyBytes = forge.util.hexToBytes(encryptedSymmetricKeyHex);
+    console.log("encryptedSymmetricKeyBytes ," ,encryptedSymmetricKeyBytes)
+    // Decrypt the symmetric key using RSA
+    const decryptedSymmetricKey = privateKey.decrypt(encryptedSymmetricKeyBytes);
+  console.log("decryptedSymmetricKey ," ,decryptedSymmetricKey)
+    return decryptedSymmetricKey;
+  };
+
+
+
   const GenerateAESKey = () => {
     const symmetricKey = generateSymmetricKey();
     const hexString = Array.from(symmetricKey, (byte) =>
       ("0" + (byte & 0xff).toString(16)).slice(-2)
     ).join("");
     setEncryptionKey(hexString);
-    console.log("AES key :", hexString);
+    // console.log("AES key :", hexString);
   };
 
   useEffect(() => {
-    // const generateRSAKeys = () => {
-    //   const keyPair = forge.pki.rsa.generateKeyPair({ bits: 2048 });
-    //   console.log("keypair", keyPair);
-    //   const privateKeyPem = forge.pki.privateKeyToPem(keyPair.privateKey);
-    //   const publicKeyPem = forge.pki.publicKeyToPem(keyPair.publicKey);
-    //   console.log("Private Key:", privateKeyPem);
-    //   console.log("Public Key:", publicKeyPem);
-    //   setPrivateKey(privateKeyPem)
-    //   setPublicKey(publicKeyPem)
-    // };
-
     const generateRSAKeys = () => {
       const keyPair = forge.pki.rsa.generateKeyPair({ bits: 2048 });
-
-      // Extract raw keys without PEM formatting
-      const privateKey = forge.pki.privateKeyToAsn1(keyPair.privateKey);
-      const publicKey = forge.pki.publicKeyToAsn1(keyPair.publicKey);
-
-      // Convert ASN.1 objects to DER encoding (binary)
-      const privateKeyDer = forge.asn1.toDer(privateKey).getBytes();
-      const publicKeyDer = forge.asn1.toDer(publicKey).getBytes();
-
-      // Convert DER encoding to base64 for easy storage or transmission
-      const privateKeyBase64 = forge.util.encode64(privateKeyDer);
-      const publicKeyBase64 = forge.util.encode64(publicKeyDer);
-
-      console.log("Private Key (Raw):", privateKeyBase64);
-      console.log("Public Key (Raw):", publicKeyBase64);
-
-      // Store or use the keys as needed
-      setPrivateKey(privateKeyBase64);
-      setPublicKey(publicKeyBase64);
+      const privateKeyPem = forge.pki.privateKeyToPem(keyPair.privateKey);
+      const publicKeyPem = forge.pki.publicKeyToPem(keyPair.publicKey);
+       console.log("Private Key:", privateKeyPem);
+       console.log("Public Key:", publicKeyPem);
+      setPrivateKey(privateKeyPem)
+      setPublicKey(publicKeyPem)
     };
+
+    // const generateRSAKeys = () => {
+    //   const keyPair = forge.pki.rsa.generateKeyPair({ bits: 2048 });
+
+    //   // Extract raw keys without PEM formatting
+    //   const privateKey = forge.pki.privateKeyToAsn1(keyPair.privateKey);
+    //   const publicKey = forge.pki.publicKeyToAsn1(keyPair.publicKey);
+
+    //   // Convert ASN.1 objects to DER encoding (binary)
+    //   const privateKeyDer = forge.asn1.toDer(privateKey).getBytes();
+    //   const publicKeyDer = forge.asn1.toDer(publicKey).getBytes();
+
+    //   // Convert DER encoding to base64 for easy storage or transmission
+    //   const privateKeyBase64 = forge.util.encode64(privateKeyDer);
+    //   const publicKeyBase64 = forge.util.encode64(publicKeyDer);
+
+    //   console.log("Private Key (Raw):", privateKeyBase64);
+    //   console.log("Public Key (Raw):", publicKeyBase64);
+
+    //   // Store or use the keys as needed
+    //   setPrivateKey(privateKeyBase64);
+    //   setPublicKey(publicKeyBase64);
+    // };
 
     generateRSAKeys();
   }, []);
@@ -158,23 +203,7 @@ const App: React.FC<EncryptorProps> = () => {
     return { iv: forge.util.bytesToHex(iv), encryptedMessage };
   };
 
-  const handleEncryption = () => {
-    if (encryptionKey !== "") {
-      const { encryptedMessage, iv } = encryptWithAES(plaintext, encryptionKey);
-      console.log(`Original Message: ${plaintext}`);
-      console.log(`Symmetric Key Used: ${encryptionKey}\n`);
-      setEncryptedMessage(encryptedMessage);
-    }
-  };
-
-  const handleDecryption = () => {
-    const decryptedMessage = decryptWithAES(
-      encryptedMessage || "",
-      encryptionKey,
-      ""
-    );
-    console.log(`Decrypted Message: ${decryptedMessage}`);
-  };
+  
 
   const decryptWithAES = (
     encryptedMessage: string,
@@ -182,6 +211,8 @@ const App: React.FC<EncryptorProps> = () => {
     iv: string
   ): string | null => {
     try {
+
+      console.log("Decryption Process :",encryptedMessage,key,iv )
       const decipher = forge.cipher.createDecipher(
         "AES-CBC",
         forge.util.createBuffer(forge.util.hexToBytes(key))
@@ -198,6 +229,16 @@ const App: React.FC<EncryptorProps> = () => {
       console.error("Error during decryption:", error.message);
       return null;
     }
+  };
+
+  const cleanPublicKey = (publicKeyPem: string) => {
+    // Remove leading/trailing whitespace and line breaks
+    const cleanedKey = publicKeyPem.trim().replace(/\n/g, '');
+  
+    // Check the cleaned key
+    // console.log('Cleaned Public Key:', cleanedKey);
+  
+    return cleanedKey;
   };
 
   return (
@@ -263,7 +304,7 @@ const App: React.FC<EncryptorProps> = () => {
                   </Row>
                 ) : (
                   <div>
-                    <SendMessages GenerateAESKey={GenerateAESKey} />
+                    <SendMessages GenerateAESKey={GenerateAESKey} setMessage={setMessage} handleSendMessage={handleSendMessage}/>
                   </div>
                 )}
               </div>
@@ -322,3 +363,23 @@ export default App;
 </div>
  */
 }
+
+
+
+// const handleEncryption = () => {
+  //   if (encryptionKey !== "") {
+  //     const { encryptedMessage, iv } = encryptWithAES(plaintext, encryptionKey);
+  //     console.log(`Original Message: ${plaintext}`);
+  //     console.log(`Symmetric Key Used: ${encryptionKey}\n`);
+  //     setEncryptedMessage(encryptedMessage);
+  //   }
+  // };
+
+  // const handleDecryption = () => {
+  //   const decryptedMessage = decryptWithAES(
+  //     encryptedMessage || "",
+  //     encryptionKey,
+  //     ""
+  //   );
+  //   console.log(`Decrypted Message: ${decryptedMessage}`);
+  // };
