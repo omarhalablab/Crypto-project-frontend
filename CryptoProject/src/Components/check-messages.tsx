@@ -15,7 +15,7 @@ const CheckMessages: React.FC<CheckMessagesProps> = ({handleCheckNumber}) => {
     <div style={{ margin: "20px 20px" }}>
       <Form>
         <Row>
-          <Col md={6}>
+          <Col md={9}>
             <FormGroup>
               <Label for="phoneNumber">Check Phone Number</Label>
               <Input
@@ -41,7 +41,7 @@ const CheckMessages: React.FC<CheckMessagesProps> = ({handleCheckNumber}) => {
               />
             </FormGroup>
           </Col>
-          <Col md={6} >
+          <Col md={3} >
             <div style={{marginTop:"30px"}}>
             <Button onClick={handleSubmit}>Check</Button>
             </div>

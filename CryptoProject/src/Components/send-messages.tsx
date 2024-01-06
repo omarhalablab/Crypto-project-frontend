@@ -8,7 +8,6 @@ interface SendMessagesProps {
 
 const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey,setMessage,handleSendMessage}) => {
     const [error,setError] = useState<boolean>(false)
-    const [phoneNumberToCheck , setPhoneNumberToCheck] = useState<string|number>()
     const handleSubmit = (e:any) =>{
         e.preventDefault();
         handleSendMessage()
@@ -26,7 +25,7 @@ const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey,setMessage,ha
     <div style={{margin:"20px 20px"}}>
       <Form>
         <Row>
-          <Col md={6}>
+          <Col md={9}>
             <FormGroup>
               <Label for="phoneNumber">Enter Message</Label>
               <Input
@@ -52,7 +51,7 @@ const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey,setMessage,ha
               />
             </FormGroup>
           </Col>
-          <Col md={6} >
+          <Col md={3} >
             <div style={{marginTop:"30px"}}>
             <Button onClick={handleSubmit}>Send Message</Button>
             </div>
