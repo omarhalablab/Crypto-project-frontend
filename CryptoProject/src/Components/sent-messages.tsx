@@ -77,7 +77,7 @@ const SentMessages: React.FC<SentMessagesProps> = ({
         <Table>
           <thead>
             <tr>
-              <th>Sender Key</th>
+              <th>Receiver Key</th>
               <th>Encrtpted Message</th>
             </tr>
           </thead>
@@ -85,7 +85,7 @@ const SentMessages: React.FC<SentMessagesProps> = ({
             {data.length > 0 &&
               data.map((item: ReceivedMessage) => (
                 <tr key={item._id}>
-                  <td>{item.sender_key}</td>
+                  <td>{item.receiver_key}</td>
                   <td>{item.message}</td>
                 </tr>
               ))}

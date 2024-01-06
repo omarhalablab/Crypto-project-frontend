@@ -34,6 +34,7 @@ const App: React.FC<EncryptorProps> = () => {
     publicKey: "",
   });
   const [UserDoesNotExist, setUserDoesNotExist] = useState<boolean>(false);
+  const [messageSent, setMessageSent] = useState(false);
   const [message, setMessage] = useState<string>("");
   // public and private keys for RSA
   const [pubKey, setPublicKey] = useState();
@@ -51,7 +52,7 @@ const App: React.FC<EncryptorProps> = () => {
         const requestData = {
           phone: userName,
           public_key: pubKey,
-          password:password
+          password: password,
         };
 
         const response = await axios.post(apiUrl, requestData);
@@ -91,17 +92,16 @@ const App: React.FC<EncryptorProps> = () => {
   const handleSendMessage = async () => {
     try {
       //encrypt message using AES key
-      const  encryptedMessage = encryptWithAES(message, encryptionKey);
+      const encryptedMessage = encryptWithAES(message, encryptionKey);
 
       //// encrypt AES key with public key
       const symmetricKey = encryptionKey;
-      console.log("Symmetric Key : ",symmetricKey)
+      console.log("Symmetric Key : ", symmetricKey);
       const publicKey = forge.pki.publicKeyFromPem(
         `${userToMessage.publicKey}`
       );
 
       const encryptedAesKey = publicKey.encrypt(symmetricKey);
-
 
       const apiUrl = "http://localhost:3000/send";
       const requestData = {
@@ -111,15 +111,20 @@ const App: React.FC<EncryptorProps> = () => {
         AesKey: encryptedAesKey,
       };
 
-      console.log("Data sent: ",requestData)
+      console.log("Data sent: ", requestData);
       const response = await axios.post(apiUrl, requestData);
+      if (response.status === 201) {
+        setMessageSent(true);
 
+        setTimeout(() => {
+          setMessageSent(false);
+        }, 2000);
+      }
       ///check response
       console.log("Response sending message, ", response);
     } catch (error) {}
   };
 
-  
   const GenerateAESKey = () => {
     const symmetricKey = generateSymmetricKey();
     const symmetricKEyHex = forge.util.bytesToHex(symmetricKey);
@@ -141,12 +146,9 @@ const App: React.FC<EncryptorProps> = () => {
     generateRSAKeys();
   }, []);
 
-  const encryptWithAES = (
-    message: string,
-    key: string
-  ): string => {
+  const encryptWithAES = (message: string, key: string): string => {
     const cipher = forge.cipher.createCipher(
-      "AES-ECB",  // Change the mode to AES-ECB
+      "AES-ECB", // Change the mode to AES-ECB
       forge.util.createBuffer(forge.util.hexToBytes(key))
     );
     cipher.start();
@@ -154,6 +156,10 @@ const App: React.FC<EncryptorProps> = () => {
     cipher.finish();
     const encryptedMessage = cipher.output.toHex();
     return encryptedMessage;
+  };
+
+  const changeUserToMessage = () => {
+    setUserToMessage({ number: "", publicKey: "" });
   };
 
   return (
@@ -224,7 +230,12 @@ const App: React.FC<EncryptorProps> = () => {
                       GenerateAESKey={GenerateAESKey}
                       setMessage={setMessage}
                       handleSendMessage={handleSendMessage}
+                      changeUserToMessage={changeUserToMessage}
+                      encryptionKey={encryptionKey}
                     />
+                    {messageSent &&(
+                      <h3 style={{ color: "blue" }}> Message Sent successfully</h3>
+                    )}
                   </div>
                 )}
               </div>
@@ -233,14 +244,20 @@ const App: React.FC<EncryptorProps> = () => {
               <div style={{ margin: "20px 20px" }}>
                 <Row>
                   <Col sm="12">
-                    <ReceivedMessages publicKey={pubKey || ""} privateKey={privKey|| ""}/>
+                    <ReceivedMessages
+                      publicKey={pubKey || ""}
+                      privateKey={privKey || ""}
+                    />
                   </Col>
                 </Row>
               </div>
             </TabPane>
             <TabPane tabId="3">
               <div style={{ margin: "20px 20px" }}>
-                <SentMessages publicKey={pubKey || ""} privateKey={privKey|| ""}/>
+                <SentMessages
+                  publicKey={pubKey || ""}
+                  privateKey={privKey || ""}
+                />
               </div>
             </TabPane>
           </TabContent>
