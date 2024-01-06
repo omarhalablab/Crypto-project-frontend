@@ -54,7 +54,7 @@ const SendMessages: React.FC<SendMessagesProps> = ({GenerateAESKey,setMessage,ha
           </Col>
           <Col md={6} >
             <div style={{marginTop:"30px"}}>
-            <Button onClick={handleSubmit}>Check</Button>
+            <Button onClick={handleSubmit}>Send Message</Button>
             </div>
           </Col>
         </Row>
